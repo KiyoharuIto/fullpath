@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ファイルのフルパス一覧が取れるやつforMac</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+    <div class="p-10">
+        <h1 class="text-3xl font-bold mb-5">ファイルのフルパス一覧が取れるやつforMac</h1>
+        <h2 class="font-bold text-xl mb-2">Step1</h2>
+        <div class="mb-10">
+            <p class="mb-3">ファイル一覧を取得したいターミナルで下記コマンドを実行してください</p>
+            <p class="bg-gray-800 rounded p-5 text-white"><span class="select-none mr-1">$</span>ls -R1 | pbcopy</p>
+        </div>
+        <h2 class="font-bold text-xl mb-2">Step2</h2>
+        <div class="grid grid-cols-2 gap-5 mb-3">
+            <textarea name="" id="before" cols="30" rows="10" class="border-gray-200 border-[1px] p-5 rounded bg-gray-50 w-full" placeholder="ここに貼り付けてください"></textarea>
+            <textarea name="" id="after" cols="30" rows="10" class="border-gray-200 border-[1px] p-5 rounded bg-gray-50 w-full" readonly placeholder="リザルト"></textarea>
+        </div>
+        <div class="mb-5">
+            <div class="mb-1">
+                <label>
+                    <input type="checkbox" id="split" class="">
+                    タブで区切る
+                </label>
+            </div>
+            <div>
+                <input type="button" value="実行" id="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" />
+            </div>
+        </div>
+    </div>
+<script>
+    const submit = document.querySelector('#submit')
+    submit.addEventListener('click', (e)=>{
+        const before = document.querySelector('#before')
+        const after = document.querySelector('#after')
+        const split = document.querySelector('#split')
+
+        const arr = before.value.split("\n").filter((v)=>v)
+        const data = arr.map((val)=>{
+            if(val.startsWith('./')){
+                const dir = val.replace(/.$/, '/')
+                return [dir, '']
+            }else{
+                return ['', val]
+            }
+        })
+        // ずらす
+        let flg = false //直下のファイルリストは親を持たないのでシフトしない
+        // 右列の内容を一つ後ろの内容に置き換える
+        const shift = data.map((val, index)=>{
+            if (val[0]!==""){flg = true}
+            if(flg && data.length > index+1){
+                return [val[0], data[index+1][1]]
+            }else{
+                return val
+            }
+        })
+        delete shift[shift.length-1] //最終行を削除
+
+        // [1]にドットが含まれない行はファイルではないので含まない
+        const filtered = shift.filter((val)=>val[1].match(/^(.*\.).*$/))
+
+        // 親ディレクトリ
+        let dir = './'
+        const output = filtered.map((val)=>{
+            if (val[0]!=""){
+                dir = val[0]
+            }
+            return [dir, val[1]]
+        })
+        after.value = output.map((val)=>{
+            if(split.checked){
+                return val[0]+"\t"+val[1]
+            }else{
+                return val[0]+val[1]
+            }
+        }).join('\n')
+    })
+</script>
+</body>
+</html>
